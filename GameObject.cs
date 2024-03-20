@@ -6,6 +6,7 @@
 
     public string name;
 
+
     public GameObject()
     {
         name = "";

@@ -46,5 +46,7 @@
         return (InputMapping[buttonName].button == keyInfo.Key
             || InputMapping[buttonName].altButton == keyInfo.Key);
     }
+
+    
 }
 

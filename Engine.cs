@@ -11,6 +11,8 @@ class Engine
     {
 
     }
+
+    
     private static Engine? instance;
 
     public static Engine GetInstance()
@@ -27,8 +29,15 @@ class Engine
 
     public List<GameObject> gameObjects;
     public bool isRunning;
-    
 
+    public bool isNextLoading = false;
+    public string nextSceneName = string.Empty;
+
+    public void NextLoadScene(string _nextSceneName)
+    {
+        isNextLoading = true;
+        nextSceneName = _nextSceneName;
+    }
 
     public void Init() //default 생성자
     {
@@ -49,65 +58,144 @@ class Engine
         string Dir = System.IO.Directory.GetParent(System.Environment.CurrentDirectory).Parent.FullName;
         string[] map = File.ReadAllLines(Dir + "/../data/"+sceneName);
         //Console.WriteLine(Dir);
-//#endif
-
+        //#endif
+        GameObject newGameObject;
         for (int y = 0; y < map.Length; ++y)
         {
             for (int x = 0; x < map[y].Length; ++x)
             {
                 if (map[y][x] == '*')
                 {
-                    GameObject newGameObject = Instantiate(new GameObject());
+                    newGameObject = Instantiate<GameObject>(); // 생성은 Instantiate<T>에서 하게 변경
                     newGameObject.name = "Wall";
                     newGameObject.transform.x = x;
                     newGameObject.transform.y = y;
                     SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
                     renderer.shape = '*';
+                    renderer.renderOrder = RenderOrder.Wall;
+                    newGameObject.AddComponent<Collider2D>();
 
-                    
-                }
-                else if (map[y][x] == ' ')
-                {
-                    GameObject newGameObject = Instantiate(new GameObject());
+                    newGameObject = Instantiate<GameObject>();
                     newGameObject.name = "Floor";
                     newGameObject.transform.x = x;
                     newGameObject.transform.y = y;
-                    //SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
-                    //renderer.shape = ' ';
+                    renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.shape = ' ';
+                    renderer.renderOrder = RenderOrder.Floor;
+
+                }
+                else if (map[y][x] == ' ') // 벽 밑에도 바닥이 있음
+                {
+                    newGameObject = Instantiate<GameObject>();
+                    newGameObject.name = "Floor";
+                    newGameObject.transform.x = x;
+                    newGameObject.transform.y = y;
+                    SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.shape = ' ';
+                    renderer.renderOrder = RenderOrder.Floor;
                 }
                 else if (map[y][x] == 'G')
                 {
-                    GameObject newGameObject = Instantiate(new GameObject());
+                    newGameObject = Instantiate<GameObject>();
                     newGameObject.name = "Goal";
                     newGameObject.transform.x = x;
                     newGameObject.transform.y = y;
                     SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.renderOrder = RenderOrder.Goal;
                     renderer.shape = 'G';
+                    Collider2D collider2D = newGameObject.AddComponent<Collider2D>();
+                    collider2D.isTrigger = true;
+
+                    newGameObject = Instantiate<GameObject>();
+                    newGameObject.name = "Floor";
+                    newGameObject.transform.x = x;
+                    newGameObject.transform.y = y;
+                    renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.shape = ' ';
+                    renderer.renderOrder = RenderOrder.Floor;
                 }
                 else if (map[y][x] == 'P')
                 {
-                    GameObject newGameObject = Instantiate(new GameObject());
+                    newGameObject = Instantiate<GameObject>();
                     newGameObject.name = "Player";
                     newGameObject.transform.x = x;
                     newGameObject.transform.y = y;
                     SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.renderOrder = RenderOrder.Player;
                     renderer.shape = 'P';
                     newGameObject.AddComponent<PlayerController>();
+                    newGameObject.AddComponent<Collider2D>();
+                    
+
+                    newGameObject = Instantiate<GameObject>();
+                    newGameObject.name = "Floor";
+                    newGameObject.transform.x = x;
+                    newGameObject.transform.y = y;
+                    renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.shape = ' ';
+                    renderer.renderOrder = RenderOrder.Floor;
                 }
                 else if (map[y][x] == 'M')
                 {
-                    GameObject newGameObject = Instantiate(new GameObject());
+                    newGameObject = Instantiate<GameObject>();
                     newGameObject.name = "Monster";
                     newGameObject.transform.x = x;
                     newGameObject.transform.y = y;
                     SpriteRenderer renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.renderOrder = RenderOrder.Monster;
                     renderer.shape = 'M';
-                    //newGameObject.AddComponent<PlayerController>();
+                    Collider2D collider2D = newGameObject.AddComponent<Collider2D>();
+                    collider2D.isTrigger = true;
+                    newGameObject.AddComponent<AIController>(); 
+
+                    newGameObject = Instantiate<GameObject>();
+                    newGameObject.name = "Floor";
+                    newGameObject.transform.x = x;
+                    newGameObject.transform.y = y;
+                    renderer = newGameObject.AddComponent<SpriteRenderer>();
+                    renderer.shape = ' ';
+                    renderer.renderOrder = RenderOrder.Floor;
                 }
             }
         }
 
+        newGameObject = Instantiate<GameObject>();
+        newGameObject.name = "GameManager";
+        newGameObject.AddComponent<GameManager>();
+
+        RenderSort(); // 직접 Sort() 구현
         //gameObjects.Sort();
+    }
+
+    public void RenderSort()
+    {
+        
+
+        for (int i = 0; i < gameObjects.Count; i++)
+        {
+            for (int j = i + 1; j < gameObjects.Count; j++)
+            {
+                //GameObject prevObject = gameObjects[i]; // 임시값이라서 이걸 변경해도 의미 없음
+                //GameObject nextObject = gameObjects[j];
+                SpriteRenderer? prevRender = gameObjects[i].GetComponent<SpriteRenderer>();
+                SpriteRenderer? nextRender = gameObjects[j].GetComponent<SpriteRenderer>();
+                if(prevRender != null && nextRender != null)
+                {
+                    if ((int)prevRender.renderOrder > (int)nextRender.renderOrder)
+                    {
+                        GameObject temp = gameObjects[i];
+                        gameObjects[i] = gameObjects[j];
+                        gameObjects[j] = temp;
+                    }
+                }
+
+                
+            }
+        }
+        //for (int i = 0;i < number.Length; i++)
+        //{
+        //    Console.WriteLine(number[i]);
+        //}
     }
 
     public void Run()
@@ -117,6 +205,13 @@ class Engine
             ProcessInput(); //생성 로드
             Update();
             Render();
+            if (isNextLoading)
+            {
+                gameObjects.Clear();
+                LoadScene(nextSceneName);
+                isNextLoading = false;
+                nextSceneName = string.Empty;
+            }
         } // frame 
     }
 
@@ -125,12 +220,19 @@ class Engine
         gameObjects.Clear();
     }
 
-    public GameObject Instantiate(GameObject newGameObject)
+    public T Instantiate<T>() where T : GameObject, new() //생성을 여기서 하고 LoadScene에서는 로드만
     {
-        gameObjects.Add(newGameObject);
-        
-        return newGameObject;
+        T newObject = new T();
+        gameObjects.Add( newObject );
+        return newObject;
     }
+
+    //public GameObject Instantiate(GameObject newGameObject)
+    //{
+    //    gameObjects.Add(newGameObject);
+        
+    //    return newGameObject;
+    //}
 
     public void ProcessInput()
     {
@@ -162,6 +264,18 @@ class Engine
         }
     }
 
+    public GameObject? Find(string name)
+    {
+        foreach (GameObject gameObject in gameObjects)
+        {
+            if(gameObject.name == name)
+            {
+                return gameObject;
+            }
+        }
+
+        return null;
+    }
      
 
 
