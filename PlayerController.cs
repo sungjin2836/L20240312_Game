@@ -1,7 +1,19 @@
-﻿class PlayerController : Component
+﻿using SDL2;
+
+class PlayerController : Component
 {
+    public SpriteRenderer spriteRenderer;
+
+    public void start()
+    {
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+    }
     public override void Update()
     {
+
+        
+
+        //spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         if (transform == null)
         {
             return;
@@ -10,23 +22,29 @@
         int oldX = transform.x;
         int oldY = transform.y;
 
-        if (Input.GetButton("Left"))
+
+        if (Input.GetKey(SDL.SDL_Keycode.SDLK_a))
         {
             transform.Translate(-1, 0);
+            Engine.GetInstance().moveIndex = 0;
+            //spriteRenderer.currentIndex = 0; 스프라이트랜더러에서 받아올경우
         }
-        if (Input.GetButton("Right"))
+        if (Input.GetKey(SDL.SDL_Keycode.SDLK_d))
         {
             transform.Translate(1, 0);
+            Engine.GetInstance().moveIndex = 1;
         }
-        if (Input.GetButton("Up"))
+        if (Input.GetKey(SDL.SDL_Keycode.SDLK_w))
         {
             transform.Translate(0, -1);
+            Engine.GetInstance().moveIndex = 2;
         }
-        if (Input.GetButton("Down"))
+        if (Input.GetKey(SDL.SDL_Keycode.SDLK_s))
         {
             transform.Translate(0, 1);
+            Engine.GetInstance().moveIndex = 3;
         }
-        if (Input.GetButton("Quit"))
+        if (Input.GetKey(SDL.SDL_Keycode.SDLK_ESCAPE))
         {
             Engine.GetInstance().Stop();
         }
@@ -66,6 +84,8 @@
 
     }
 
+
+
     public void OnTrigger(GameObject other)
     {
         //겹쳤을때 처리 할 로직
@@ -78,7 +98,8 @@
         else if (other.name == "Goal")
         {
             Engine.GetInstance().Find("GameManager").GetComponent<GameManager>().isNextStage = true;
-            Console.WriteLine("Goal");
+            //Console.WriteLine("Goal");
+            
             //다음판
         }
     }
